@@ -83,6 +83,16 @@ def getNextDayDate(date):
     nextday = str(nextstruct.tm_year) + '_' + str(nextstruct.tm_mon) + '_' +  str(nextstruct.tm_mday)
     return nextday
 
+#获取date的上一天日期,date格式:年_月_日
+def getLastDayDate(date):
+    structtime = getStruceTimeWithStrDate(date)
+    sectime = makeSecTimeWithStructTime(structtime)
+    onedaysec = 24*60*60
+    sectime -= onedaysec
+    nextstruct = getDateStructWithSec(sectime)
+    nextday = str(nextstruct.tm_year) + '_' + str(nextstruct.tm_mon) + '_' +  str(nextstruct.tm_mday)
+    return nextday
+
 #获取从某一天一直到今天的所有以天计算日期,年_月_日
 def getDateDaysFromOneDate(startDate):
     startday = startDate

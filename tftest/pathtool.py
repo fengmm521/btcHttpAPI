@@ -72,13 +72,17 @@ def getAllDirs(spth):
                     makedirstmp.append(dtmp)
     return makedirstmp
 #获取目录下的所有文件路径
-def getAllFiles(spth):
-    files = getAllExtFile(spth,'.*')
+def getAllFilesPth(spth,fromatx = ''):
+    files = []
+    if fromatx != '':
+        files = getAllExtFile(spth,'.*')
+    else:
+        files = getAllExtFile(spth,fromatx)
     makedirstmp = []
     isOK = True
     # 分析所有要创建的目录
     for d in files:
-        makedirstmp.append(d[0])
+        makedirstmp.append(spth + d[0])
     return makedirstmp
 
 

@@ -30,6 +30,27 @@ def getlastLogDate(logfs,isLog = True):
     tmpls = sorted(sorts,reverse=True)
     return dates[tmpls[0]]
 
+def sortLogDate(logs):
+    dates = []
+    if logs[0].find('depth') != -1:
+        dates = getLogDateDic(logs,False)
+    else:
+        dates = getLogDateDic(logs,True)
+    sorts = dates.keys()
+    tmpls = sorted(sorts,reverse=False)
+    outlogs = []
+    for k in tmpls:
+        outlogs.append(dates[k])
+    return outlogs
+
+def allLogFiles():
+    tlogfiles,deplogfiles = getHeaveLogFiles()
+    outlogs = sortLogDate(tlogfiles)
+    outdlogs = sortLogDate(deplogfiles)
+    if len(outlogs) != len(outdlogs):
+        print 'depdata not eque logdata!'
+    return outlogs,outdlogs
+
 #获取log数据开始保存的第一天时间
 def getFirstLogDate(logfs,isLog = True):
     dates = getLogDateDic(logfs,isLog)
@@ -48,15 +69,18 @@ def getHeaveLogFiles():
             depthfs.append(n[2])
     return tradetxtfs,depthfs
 
-def getDataLogFromServer(startDate):
-    todeydate = timetool.getDateDay()
-    print todeydate
-    if startDate == todeydate:
-        return
-    
-
-
-def main():
+def getDataLogFromServer(logDate):
+    localfilepth = './data/%s.txt'%(logDate)
+    cmd = ''
+    if os.path.exists(localfilepth):
+        cmd = '/bin/rm %s'%(localfilepth)
+        os.system(cmd)
+    cmd = 'scp root@btc.woodcol.com:/home/woodcol/btcctrade/test/btc38http/%s.txt ./data/'%(logDate)
+    os.system(cmd)
+    cmd = 'scp root@btc.woodcol.com:/home/woodcol/btcctrade/test/btc38http/depth_%s.txt ./data/'%(logDate)
+    os.system(cmd)
+    print 'downd %s end'%(logDate)
+def getNewLogFromServer():
     tradefs,depthfs = getHeaveLogFiles()
     lastdate = getlastLogDate(tradefs)
     firstDate = getFirstLogDate(tradefs)
@@ -64,6 +88,19 @@ def main():
     lastdate = getlastLogDate(depthfs,False)
     firstDate = getFirstLogDate(depthfs,False)
     print firstDate,lastdate
+    lastdate = timetool.getLastDayDate(lastdate)
+    print lastdate
+    needdowndays = timetool.getDateDaysFromOneDate(lastdate)
+    print needdowndays
+    for d in needdowndays:
+        print 'start downloding %s...'%(d)
+        getDataLogFromServer(d)
+
+
+
+def main():
+    getNewLogFromServer()
+    
     
 
 if __name__ == '__main__':
