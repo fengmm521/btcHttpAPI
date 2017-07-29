@@ -6,6 +6,7 @@
 # @Version : $Id$
 
 import os
+os.environ['PATH'] = '/usr/bin/:/usr/sbin/'
 import codecs
 import sys
 import xlrd
@@ -13,58 +14,65 @@ import time
 import urllib2
 import socket  
 import shutil 
+import math
+import numpy as np
 #将所有Excel文件转为xml文件
 reload(sys)
 sys.setdefaultencoding( "utf-8" )
 
-def cur_file_dir():
-    #获取脚本路径
-    path = sys.path[0]
-    #判断为脚本文件还是py2exe编译后的文件，如果是脚本文件，则返回的是脚本的目录，如果是py2exe编译后的文件，则返回的是编译后的文件路径
-    if os.path.isdir(path):
-        return path
-    elif os.path.isfile(path):
-        return os.path.dirname(path)
 
-#获取父目录
-def GetParentPath(strPath):
-    if not strPath:
-        return None;
-    lsPath = os.path.split(strPath);
-    if lsPath[1]:
-        return lsPath[0];
-    lsPath = os.path.split(lsPath[0]);
-    return lsPath[0];
+class Test():
+    """docstring for Test"""
+    def __init__(self,softmin,softmax):
+        self.softmin = softmin
+        self.softmax = softmax
+        self.softcount = self.softmax - self.softmin + 1
+        self.halfCount = int(math.floor(self.softcount/2.0))
+        self.initPrint()
+    def initPrint(self):
+        print self.softmin,self.softmax,self.softcount,self.halfCount
 
-#获取所有界面的json文件列表
-def getAllExtFile(path,fromatx = ".txt"):
-    jsondir = path
-    jsonfilelist = []
-    for root, _dirs, files in os.walk(jsondir):
-        for filex in files:          
-            #print filex
-            name,text = os.path.splitext(filex)
-            if cmp(text,fromatx) == 0:
-                jsonArr = []
-                rootdir = path
-                dirx = root[len(rootdir):]
-                pathName = dirx +os.sep + filex
-                jsonArr.append(pathName)
-                (newPath,_name) = os.path.split(pathName)
-                jsonArr.append(newPath)
-                jsonArr.append(name)
-                jsonfilelist.append(jsonArr)
-    return jsonfilelist
+    def conventSoftmax(self,datamin,datamax):
+        #数据从-15到15一共31个数，取最大值和最小值为softmax分类
+        lst = [0]*self.softcount
+        if datamin <= self.softmin:
+            mintmp = 0
+        elif datamin >= self.softmax:
+            lst[self.softcount - 1] = 1
+            return lst
+        else:
+            mintmp = int(math.floor((datamin+self.halfCount)%self.softcount))
+            print math.floor((datamin+self.halfCount)%self.softcount)
+            print datamin,datamin%self.halfCount,-11.4%20
+        if datamax >= self.softmax:
+            maxtmp = self.softcount - 1
+        elif datamax <= self.softmin:
+            lst[0] = 1
+            return lst
+        else:
+            maxtmp = int(math.floor((datamax+self.halfCount)%self.softcount))
+            print math.floor((datamax+self.halfCount)%self.softcount)
+        lst[mintmp] = 1
+        lst[maxtmp] = 1
+        return lst
+
+
+def numpyTest():
+    a = np.array([2,4,5,6,3,1,9,1])
+    print a
+    s = np.mean(a)
+    print s
+    d = np.std(a)
+    print d
+    xa = (a - np.mean(a))/np.std(a)
+    print xa
+    
 
 def main():
-    tmpls = [15.560000000000002, 3.5721612692642646, 14.889999999999986, 1.877321443430611, 14.740000000000009, 0.025255605378472008, 14.180000000000007, 0.5119967572992575, 13.889999999999986, 2.5599837864962875, 13.849999999999966, 2.6276736831197223, 13.389999999999986, 1.7066558576641917, 12.889999999999986, 1.7066558576641917, 12.769999999999982, 0.18679809159216149, 12.509999999999991, 36.302580533117684, 11.889999999999986, 19.60845317637165, 10.729999999999961, 0.025558536793207402, 9.889999999999986, 10.23993514598515, 9.879999999999995, 3.4064850918977267, 9.849999999999966, 16.04310095198271, 8.889999999999986, 0.8885899988352246, 7.889999999999986, 5.40703528019981, 6.899999999999977, 0.02586556418200119, 6.889999999999986, 77.29153770001682, 6.389999999999986, 16.45498101003174, 5.889999999999986, 17.713704216650502, 4.889999999999986, 0.3413311715328384, 3.8899999999999864, 9.41651192375339, 3.8799999999999955, 3.7514186726149226, 2.8899999999999864, 1.6930026108028782, 2.8600000000000136, 0.026177028876024903, 2.75, 0.0007894989997554551, 2.3899999999999864, 9.956988330011832, 1.3899999999999864, 2.5327638202256444, 1.3700000000000045, 0.33362118303025456, 0.0, 0.0, 0.8011778164550369, -0.13999999999998636, 0.00016349763116422957, -0.9000000000000341, 65.45025214142176, -0.910000000000025, 1.0659811740055267, -1.009999999999991, 0.4391542959759491, -1.1100000000000136, 0.8446611890557056, -3.090000000000032, 0.26453165793794975, -3.7100000000000364, 0.0008014455907591044, -4.830000000000041, 0.026544130551008474, -5.110000000000014, 32.47209129995808, -5.610000000000014, 0.14114658338991626, -6.110000000000014, 0.5119967572992575, -6.810000000000002, 52.95123063122455, -6.860000000000014, 3.15188787770724, -7.100000000000023, 0.7952770538271631, -7.110000000000014, 1.5541403862784455, -8.04000000000002, 0.3297926419447565, -8.110000000000014, 1.715690893774666, -8.53000000000003, 0.026862421868462848, -8.78000000000003, 0.3413311715328384, -9.910000000000025, 0.2713531614010335, -10.110000000000014, 2.213783184470362, -11.110000000000014, 4.54641173890737, -11.900000000000034, 12.970584518247858, -12.090000000000032, 5.953750708277115, -12.330000000000041, 0.02718395583204678, -13.0, 3.4683455641081373, -13.009999999999991, 0.345987099378132, -13.050000000000011, 12.785180935156994, -13.110000000000014, 100.0]
-    flogs = []
-    for i in range(60):
-        if i < 30:
-            flogs.append(2*i)
-        else:
-            flogs.append(2*i + 1)
-    print flogs
+    numpyTest()
+    # obj = Test(-20, 20)
+    # lstmp = obj.conventSoftmax(-17.3, -2)
+    # print lstmp
 if __name__ == '__main__':  
     main()
     
