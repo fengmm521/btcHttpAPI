@@ -215,7 +215,7 @@ class Pattern():
             for d in tmppat:
                 tmpdicdat = tmpdicdat + d
             tmpd = np.array(tmpdicdat)
-            self.posDic[self.pos] = (tmpd - self.minDat)/self.maxPattenr
+            self.posDic[self.pos] = (tmpd - self.minDat)/self.maxPattenr  #数据标准化，使输入层数据在0~1之间
             self.posLabel[self.pos] = list(self._getPatternLable())
             outls.append(self.posDic[self.pos])
             outls.append(self.posLabel[self.pos])
