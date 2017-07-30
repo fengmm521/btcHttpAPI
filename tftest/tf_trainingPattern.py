@@ -45,6 +45,7 @@ class Pattern():
         self.countScale = basevalue[2]
         self.minDat = basevalue[3]
         self.maxDat = basevalue[4]
+        self.maxPattenr = (self.maxDat - self.minDat) * 2 #为了使数据变成在0～1之间的可处理数据，maxPattern就是当有数据等于这个值时基结果会设为1，比他小的按比例输出
         self.patType = 'basevalue'      #数据类型,basevalue:训练数据，有基础值，basevalue:训练数据，动态基础值
         self.pos = 0                    #当前获取的数据号,训练数据从前向后每次取一组数据，数据会根据不同数据类型来生成训练数据
         self.posDic = {}                #生成的训练数据
@@ -62,26 +63,29 @@ class Pattern():
         self.softcount = self.softmax - self.softmin + 1
         self.halfCount = int(math.floor(self.softcount/2.0))
         self.initFlogs()
-    def conventSoftmax(self,datamin,datamax):
+    def conventSoftmax(self,datamin,datamax,datstate):
         #数据从-15到15一共31个数，取最大值和最小值为softmax分类
-        lst = [0]*self.softcount
+        lstmin = [0]*self.softcount     #预测的最小值,这里要将预测最小值和预测最大值分开处理
+        lstmax = [0]*self.softcount     #预测的最大值,这里要将预测最小值和预测最大值分开处理
         if datamin <= self.softmin:
             mintmp = 0
         elif datamin >= self.softmax:
-            lst[self.softcount - 1] = 1
-            return lst
+            lstmax[self.softcount - 1] = 1
+            lstmin[self.softcount - 1] = 1
+            return lstmin,lstmax,datstate
         else:
             mintmp = int(math.floor((datamin+self.halfCount)%self.softcount))
         if datamax >= self.softmax:
             maxtmp = self.softcount - 1
         elif datamax <= self.softmin:
-            lst[0] = 1
-            return lst
+            lstmin[0] = 1
+            lstmax[0] = 1
+            return lstmin,lstmax,datstate
         else:
             maxtmp = int(math.floor((datamax+self.halfCount)%self.softcount))
-        lst[mintmp] = 1
-        lst[maxtmp] = 1
-        return lst
+        lstmin[mintmp] = 1
+        lstmax[maxtmp] = 1
+        return lstmin,lstmax,datstate
     def initFlogs(self):
         self.flogs = []
         for i in range(60):
@@ -116,21 +120,72 @@ class Pattern():
         if labelWtime != 0:
             self.labelWtime = labelWtime
 
+    #获取价格改变的6种未来趋势
+    def _getPrictFuture(self,lastsell,lastbuy,minselldat,maxbuydat,isUp):
+        out = 0
+        #第一种:
+        #              max
+        #   o    
+        #       min        
+        if isUp and lastbuy > minselldat and lastsell < maxbuydat:
+            out = 0
+        #第二种
+        #   o
+        #               max
+        #       min
+        elif isUp and lastbuy > minselldat and lastbuy > maxbuydat:
+            out = 1
+        #第三种
+        #   o
+        #       max
+        #               min
+        elif (not isUp) and lastbuy > minselldat and lastbuy > maxbuydat:
+            out = 2
+        #第四种
+        #               max
+        #       min
+        #   o
+        elif isUp and lastsell < minselldat and lastsell < maxbuydat:
+            out = 3
+        #第五种
+        #       max    
+        #               min
+        #   o
+        elif (not isUp) and lastsell < minselldat and lastsell < maxbuydat:
+            out = 4
+        #第六种
+        #       max
+        #   o
+        #               min    
+        elif (not isUp) and lastsell > maxbuydat and lastbuy > minselldat:
+            out = 5
+        return out
+
+
     def _getPatternLable(self): #获取当前数据的预测标记数据,wtime为下次数据时间宽度
         nextpos = self.pos + 1
         tmppat = self.pattern[nextpos:nextpos + self.labelWtime]
         tmplbuy = []
         tmplsell = []
+        lastdats = self.pattern[self.pos]
+        lastsell = lastdats[58]
+        lastbuy = lastdats[60]
         for d in tmppat:
             tmplbuy.append(d[60])
             tmplsell.append(d[58])
         if self.patType == 'basevalue':
             mindat = np.min(tmplsell)
             maxdat = np.max(tmplbuy)
+            mindatpos = np.where(np.min(tmplsell) == tmplsell)[0][0]
+            maxdatpos = np.where(np.max(tmplsell) == tmplsell)[0][0]
+            isUp = False
+            if mindatpos > maxdatpos:
+                isUp = True
             inmin = mindat - self.posBase[self.pos]
             inmax = maxdat - self.posBase[self.pos]
-            self.lableprices[self.pos] = [np.min(tmplsell),np.max(tmplbuy),self.posBase[self.pos]]
-            outlabs = self.conventSoftmax(inmin, inmax)
+            self.lableprices[self.pos] = [mindat + self.bValue,maxdat + self.bValue,self.posBase[self.pos]]
+            datstate = self._getPrictFuture(lastsell, lastbuy, mindat, maxdat, isUp)
+            outlabs = self.conventSoftmax(inmin, inmax, datstate)
             # return [np.min(tmplsell) - self.posBase[self.pos],np.max(tmplbuy) - self.posBase[self.pos]]
             return outlabs
         elif self.patType == 'dynamicvalue':
@@ -139,17 +194,19 @@ class Pattern():
     def _conventWithNewBaseValue(self,plist):
         tmpbv = plist[0][60]
         outlist = []
+        self.prices[self.pos] = []
         for n in range(len(plist)):
             tmpd = plist[n]
             tmplist = list(plist[n])
-            self.prices[self.pos] = [tmpd[58],tmpd[60]]
+            self.prices[self.pos].append([tmpd[58] + self.bValue,tmpd[60] + self.bValue])
             for i in self.flogs:
                 tmplist[i] = tmplist[i] - tmpbv
             outlist.append(tmplist)
         self.posBase[self.pos] = tmpbv
         return outlist
-
-    def _getNextTrainingDataBaseVale(self):#生成静态基数数据
+    #生成静态基数数据,生成三个网络训练数据，第一个预测最小值，第二个预测最大值，第三个预测未来趋势,
+    #使用两个隐层网络，计划第一隐层500个节点，第二隐层300节点,三个网络，将会有6个隐层，三个网络的输出分别为41,41,6的softmax层来计算交叉商损失函数
+    def _getNextTrainingDataBaseVale(self):
         outls = []
         if self.pos < self.lcount - self.wtime - self.labelWtime - 1:
             tmppat = self.pattern[self.pos:self.pos + self.wtime]
@@ -157,8 +214,9 @@ class Pattern():
             tmpdicdat = []
             for d in tmppat:
                 tmpdicdat = tmpdicdat + d
-            self.posDic[self.pos] = tmpdicdat
-            self.posLabel[self.pos] = self._getPatternLable()
+            tmpd = np.array(tmpdicdat)
+            self.posDic[self.pos] = (tmpd - self.minDat)/self.maxPattenr
+            self.posLabel[self.pos] = list(self._getPatternLable())
             outls.append(self.posDic[self.pos])
             outls.append(self.posLabel[self.pos])
             self.outpattern.append(outls)

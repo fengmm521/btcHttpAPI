@@ -56,9 +56,13 @@ class Test():
         lst[maxtmp] = 1
         return lst
 
+def testtip():
+    return 2,3,4
 
 def numpyTest():
-    a = np.array([2,4,5,6,3,1,9,1])
+    inarr = [1,4,6,7,3,4,9,11,2,3,4]
+    a = np.array(inarr)
+    print np.where(np.max(a) == a)[0][0]
     print a
     s = np.mean(a)
     print s
@@ -66,7 +70,11 @@ def numpyTest():
     print d
     xa = (a - np.mean(a))/np.std(a)
     print xa
-    
+    xi = a/(np.max(a)*1.0)
+    print xi
+    print inarr
+    tmp = testtip()
+    print list(tmp)
 
 def main():
     numpyTest()
