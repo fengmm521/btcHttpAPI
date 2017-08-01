@@ -116,7 +116,37 @@ class TradeManger():
         self.ltc = 0
         self.lockltc = 0
 
+
+        self.netBuyPrice = 0.0      #购买价
+        self.netBuyCount = 0.0      #购买量
+
+        self.netSellPrice = 0.0     #出售价
+        self.netSellCount = 0.0     #出售量
+
+
+        self.nowTradePrice = 0.0    #当前市场价
+        self.nowBuyPrice = 0.0      #当前买一价
+        self.nowSellPrice = 0.0     #当前卖一价
+
+        #根据市场深度动态调整的买触发价,买触发价为价格跌到了购买价以下，并且在一个大单（大于50）成交后,还有购买单大于100的量在支撑时
+        #可进行买入操作,否则买入价自动向下移动到下一个大单（大于100）前
+        self.changeBuyPrice = 0.0   
+        #根据市场深度动态调整的卖触发价，单卖出价在成交了一个大单（50）后，卖单还有大于(100)的卖单在作支持压价时，
+        #可作卖出操作,否则卖出操作自动向上移到下一个大单(大于100)前
+        self.changeSellPrice = 0.0  
+
         self.getAccountData()
+
+    def setNowPrice(self,tbuy,tsell,ttrade):
+        self.nowTradePrice = ttrade
+        self.nowBuyPrice = tbuy
+        self.nowSellPrice = tsell
+    #设置网络交易范围
+    def setNetBuyAndSellConfig(self,buyPrice,buyCount,sellPrice,sellCount):
+        if buyPrice >= sellCount:
+            print '买的价格大于卖价格错误'
+        pass
+        
     #init account
     def getAccountData(self):
         accountjson = getAccountHttpRequest()
@@ -172,6 +202,11 @@ class TradeManger():
         f = open('changelog.txt','a+')
         f.write(outstr)
         f.close()
+
+    
+    #得到当前最新深度数据
+    def addDepth(self,depth):
+        pass
 
     def addTicker(self,ticker):
         tmp = ticker.split('=')
