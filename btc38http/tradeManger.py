@@ -117,6 +117,17 @@ class TradeManger():
         self.lockltc = 0
 
 
+        self.bigprice = 155         #是否是大单的下限
+        self.bigbuys = []
+        self.bigsells = []
+        self.buyAllCount = 0.0      #所有买单数量
+        self.sellAllCount = 0.0     #所有卖单数量
+        self.priceRange = 0.0       #买卖单数量的价格范围
+        self.buyLenth = 0.0         #买单长度
+        self.sellLenth = 0.0        #卖单长度
+
+        self.lastOpt = 0            #0：未操作，1：买操作，-1：卖操作
+
         self.netBuyPrice = 0.0      #购买价
         self.netBuyCount = 0.0      #购买量
 
@@ -145,7 +156,11 @@ class TradeManger():
     def setNetBuyAndSellConfig(self,buyPrice,buyCount,sellPrice,sellCount):
         if buyPrice >= sellCount:
             print '买的价格大于卖价格错误'
-        pass
+        else:
+            self.netBuyPrice = buyPrice
+            self.netSellPrice = sellPrice
+            self.netBuyCount = buyCount
+            self.netSellCount = sellCount
         
     #init account
     def getAccountData(self):
@@ -166,6 +181,7 @@ class TradeManger():
             time.sleep(3)
             self.buy(amount, price)
         else:
+            self.lastOpt = 1
             savestr = 'buy->(%.2f,%.2f)'%(amount,price) + buyjson + '\n'
             f = open('tradebacklog.txt','a+')
             f.write(savestr)
@@ -178,6 +194,7 @@ class TradeManger():
             time.sleep(3)
             self.sell(amount, price)
         else:
+            self.lastOpt = -1
             savestr = 'sell->(%.2f,%.2f)'%(amount,price) + selljson + '\n'
             f = open('tradebacklog.txt','a+')
             f.write(savestr)
@@ -205,8 +222,63 @@ class TradeManger():
 
     
     #得到当前最新深度数据
+    # {"bids":[[285.01,1.848972],[285,17.787401],[284.13,0.0106],[284.12,432.37],[284.05,87.418972],[283.8,0.738],[283,3.2123],[282.28,8],[282.18,8],[282,78.191489],[281.9,70.947144],[281.8,0.184213],[281,4.80427],[280.8,9.981125],[280.48,432.37],[280,85.427669],[279.5,1.252236],[278,3.561511],[276.2,30],[275.51,100],[275,50.195061],[273,80.428881],[272.39,1.000036],[272.24,0.1],[272.1,0.973814],[272.07,0.5],[272.01,38.548836],[272,5],[271.95,18.54],[271,1]],"asks":[[289.19,2.034594],[289.2,8.084384],[289.37,0.1],[289.4,16.492278],[289.89,12.927245],[289.91,1.828025],[289.99,84.15371],[290,87.27043],[290.88,50.50909],[290.89,0.154857],[290.98,10],[291,49.907735],[291.7,2],[291.75,0.010282],[291.8,12],[292,57.939598],[292.98,9.739233],[293,1217.590741],[293.3,17.900664],[293.7,52.106786],[293.78,0.371766],[293.79,15.364027],[293.8,4.818481],[293.99,3.589798],[294,127.664955],[294.4,14.471],[294.47,3.057539],[294.88,2],[294.9,30],[294.97,16]]}
     def addDepth(self,depth):
-        pass
+        if self.netBuyPrice > 1.0 and self.netSellPrice > 1.0:
+            tmps = depth.split('=')
+            depstr = ''
+            if len(tmps[1]) > 100:
+                depstr = tmps[1]
+            depdic = json.loads(depstr)
+            buys = depdic['bids']
+            sells = depdic['asks']
+
+            self.buyAllCount = 0.0      #所有买单数量
+            self.sellAllCount = 0.0     #所有卖单数量
+            self.priceRange = 0.0       #买卖单数量的价格范围
+            self.buyLenth = 0.0         #买单长度
+            self.sellLenth = 0.0        #卖单长度
+
+            buyrange = buys[0] - buys[-1]
+            sellrange = sells[-1] - sells[0]
+            self.priceRange = min(buyrange,sellrange)
+
+            buysmall = buys[0] - self.priceRange
+            sellbig = sells[0] + self.priceRange
+
+            buycount = 0.0
+            sellcount = 0.0
+
+            for bn in range(len(buys)):
+                b = buys[bn]
+                if b[0] >= buysmall:
+                    self.buyAllCount += b[1]
+                    self.buyLenth = bn
+                if b[0] >= self.netSellPrice:
+                    buycount += b[1]
+                if b[1] > self.bigprice:
+                    tmplist = list(b)
+                    tmplist.append(bn)
+                    self.bigbuys.append(tmplist)
+
+            for sn in range(len(sells)):
+                s = sells[sn]
+                if s[0] <= sellbig:
+                    self.sellAllCount += s[1]
+                    self.sellLenth = sn
+                if s[0] <= self.netBuyPrice:
+                    sellcount += s[1]
+                if s[1] > self.bigprice:
+                    tmplist = list(s)
+                    tmplist.append(sn)
+                    self.bigsells.append(tmplist)
+            #买入操作
+            if (self.lastOpt == 0 or self.lastOpt == -1) and self.netBuyCount < sellcount and self.sellAllCount < self.buyAllCount and self.buyAllCount - self.sellAllCount > 200 and self.buyLenth > self.sellLenth:
+                self.buy(self.netBuyCount, self.netBuyPrice)
+            #卖出操作
+            elif self.lastOpt == 1 self.netSellCount < buycount and self.sellAllCount > self.buyAllCount and self.sellAllCount - self.buyAllCount > 200 and self.sellLenth > self.buyLenth:
+                self.sell(self.netSellCount, self.netSellPrice)
+        
 
     def addTicker(self,ticker):
         tmp = ticker.split('=')
@@ -297,4 +369,12 @@ if __name__ == '__main__':
     # testticeers.append('1498065035.11={"ticker":{"high":355.01,"low":301.1,"last":385.3,"vol":213292.292369,"buy":341.3,"sell":344.21}}')
     # for t in testticeers:
     #     tradetool.addTicker(t)
+    datstr = '{"bids":[[285.01,1.848972],[285,17.787401],[284.13,0.0106],[284.12,432.37],[284.05,87.418972],[283.8,0.738],[283,3.2123],[282.28,8],[282.18,8],[282,78.191489],[281.9,70.947144],[281.8,0.184213],[281,4.80427],[280.8,9.981125],[280.48,432.37],[280,85.427669],[279.5,1.252236],[278,3.561511],[276.2,30],[275.51,100],[275,50.195061],[273,80.428881],[272.39,1.000036],[272.24,0.1],[272.1,0.973814],[272.07,0.5],[272.01,38.548836],[272,5],[271.95,18.54],[271,1]],"asks":[[289.19,2.034594],[289.2,8.084384],[289.37,0.1],[289.4,16.492278],[289.89,12.927245],[289.91,1.828025],[289.99,84.15371],[290,87.27043],[290.88,50.50909],[290.89,0.154857],[290.98,10],[291,49.907735],[291.7,2],[291.75,0.010282],[291.8,12],[292,57.939598],[292.98,9.739233],[293,1217.590741],[293.3,17.900664],[293.7,52.106786],[293.78,0.371766],[293.79,15.364027],[293.8,4.818481],[293.99,3.589798],[294,127.664955],[294.4,14.471],[294.47,3.057539],[294.88,2],[294.9,30],[294.97,16]]}'
+    dicdat = json.loads(datstr)
+    bids = dicdat['bids']
+    asks = dicdat['asks']
+    a = 10.5
+    b = 11.4
+    c = min(a,b)
+    print c
     pass

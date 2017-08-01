@@ -13,6 +13,7 @@ import timetool
 
 httpClient = None
 tradetool = tradeManger.TradeManger()
+tradetool.setNetBuyAndSellConfig(278.1, 0.8, 288.1, 0.8)
  
 def getTicker():
     try:
@@ -68,6 +69,7 @@ def main():
             fname = 'depth_' + timetool.getDateDay() + '.txt'
             f = open(fname,'a+')
             savedat = str(time.time()) + '=' + depthtmp + '\n'
+            tradetool.addDepth(savedat)
             f.write(savedat)
             f.close()
             time.sleep(3)
