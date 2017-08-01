@@ -154,14 +154,18 @@ class TradeManger():
         self.nowSellPrice = tsell
     #设置网络交易范围
     def setNetBuyAndSellConfig(self,buyPrice,buyCount,sellPrice,sellCount):
-        if buyPrice >= sellCount:
+        if buyPrice >= sellPrice:
             print '买的价格大于卖价格错误'
         else:
             self.netBuyPrice = buyPrice
             self.netSellPrice = sellPrice
             self.netBuyCount = buyCount
             self.netSellCount = sellCount
-        
+            netlog = '设置买入价:%.2f,买入量:%.2f,卖出价:%.2f,卖出量:%.2f'%(self.netBuyPrice,self.netBuyCount,self.netSellPrice,self.netSellCount)
+            print netlog
+            f  = open('netlog.txt','w')
+            f.write(netlog)
+            f.close()
     #init account
     def getAccountData(self):
         accountjson = getAccountHttpRequest()
@@ -239,12 +243,12 @@ class TradeManger():
             self.buyLenth = 0.0         #买单长度
             self.sellLenth = 0.0        #卖单长度
 
-            buyrange = buys[0] - buys[-1]
-            sellrange = sells[-1] - sells[0]
+            buyrange = buys[0][0] - buys[-1][0]
+            sellrange = sells[-1][0] - sells[0][0]
             self.priceRange = min(buyrange,sellrange)
 
-            buysmall = buys[0] - self.priceRange
-            sellbig = sells[0] + self.priceRange
+            buysmall = buys[0][0] - self.priceRange
+            sellbig = sells[0][0] + self.priceRange
 
             buycount = 0.0
             sellcount = 0.0
@@ -276,7 +280,7 @@ class TradeManger():
             if (self.lastOpt == 0 or self.lastOpt == -1) and self.netBuyCount < sellcount and self.sellAllCount < self.buyAllCount and self.buyAllCount - self.sellAllCount > 200 and self.buyLenth > self.sellLenth:
                 self.buy(self.netBuyCount, self.netBuyPrice)
             #卖出操作
-            elif self.lastOpt == 1 self.netSellCount < buycount and self.sellAllCount > self.buyAllCount and self.sellAllCount - self.buyAllCount > 200 and self.sellLenth > self.buyLenth:
+            elif self.lastOpt == 1 and self.netSellCount < buycount and self.sellAllCount > self.buyAllCount and self.sellAllCount - self.buyAllCount > 200 and self.sellLenth > self.buyLenth:
                 self.sell(self.netSellCount, self.netSellPrice)
         
 
@@ -371,10 +375,10 @@ if __name__ == '__main__':
     #     tradetool.addTicker(t)
     datstr = '{"bids":[[285.01,1.848972],[285,17.787401],[284.13,0.0106],[284.12,432.37],[284.05,87.418972],[283.8,0.738],[283,3.2123],[282.28,8],[282.18,8],[282,78.191489],[281.9,70.947144],[281.8,0.184213],[281,4.80427],[280.8,9.981125],[280.48,432.37],[280,85.427669],[279.5,1.252236],[278,3.561511],[276.2,30],[275.51,100],[275,50.195061],[273,80.428881],[272.39,1.000036],[272.24,0.1],[272.1,0.973814],[272.07,0.5],[272.01,38.548836],[272,5],[271.95,18.54],[271,1]],"asks":[[289.19,2.034594],[289.2,8.084384],[289.37,0.1],[289.4,16.492278],[289.89,12.927245],[289.91,1.828025],[289.99,84.15371],[290,87.27043],[290.88,50.50909],[290.89,0.154857],[290.98,10],[291,49.907735],[291.7,2],[291.75,0.010282],[291.8,12],[292,57.939598],[292.98,9.739233],[293,1217.590741],[293.3,17.900664],[293.7,52.106786],[293.78,0.371766],[293.79,15.364027],[293.8,4.818481],[293.99,3.589798],[294,127.664955],[294.4,14.471],[294.47,3.057539],[294.88,2],[294.9,30],[294.97,16]]}'
     dicdat = json.loads(datstr)
-    bids = dicdat['bids']
-    asks = dicdat['asks']
-    a = 10.5
-    b = 11.4
-    c = min(a,b)
-    print c
+    buys = dicdat['bids']
+    sells = dicdat['asks']
+    print buys[-1]
+    buyrange = buys[0][0] - buys[-1][0]
+    sellrange = sells[-1][0] - sells[0][0]
+    print buyrange,sellrange
     pass
