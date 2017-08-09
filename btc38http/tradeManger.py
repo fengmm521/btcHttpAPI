@@ -90,6 +90,7 @@ def sellHttpRequest(amount,price):
     return None
 
 
+
 class TradeManger():
     def __init__(self,pDot = 0.03,pmaxdot = 100,tradeCondtion = 10):
         self.dot = pDot
@@ -233,6 +234,8 @@ class TradeManger():
             depstr = ''
             if len(tmps[1]) > 100:
                 depstr = tmps[1]
+            else:
+                return
             depdic = json.loads(depstr)
             buys = depdic['bids']
             sells = depdic['asks']
@@ -282,6 +285,10 @@ class TradeManger():
             #卖出操作
             elif self.lastOpt == 1 and self.netSellCount < buycount and self.sellAllCount > self.buyAllCount and self.sellAllCount - self.buyAllCount > 200 and self.sellLenth > self.buyLenth:
                 self.sell(self.netSellCount, self.netSellPrice)
+            else:
+                pass
+                #test log
+                #print 'lastOpt:',self.lastOpt,'buycount',buycount,'sellcount',sellcount,'netBuyCount',self.netBuyCount,'netSellCount',self.netSellCount,'sellAllCount',self.sellAllCount,'buyAllCount',self.buyAllCount,'sellLenth',self.sellLenth,'buyLenth',self.buyLenth
         
 
     def addTicker(self,ticker):

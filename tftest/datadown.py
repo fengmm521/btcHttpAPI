@@ -75,9 +75,9 @@ def getDataLogFromServer(logDate):
     if os.path.exists(localfilepth):
         cmd = '/bin/rm %s'%(localfilepth)
         os.system(cmd)
-    cmd = 'scp root@btc.woodcol.com:/home/woodcol/btcctrade/test/btc38http/%s.txt ./data/'%(logDate)
+    cmd = 'scp root@btc.woodcol.com:/home/woodcol/btcctrade/test/btc38http/data/%s.txt ./data/'%(logDate)
     os.system(cmd)
-    cmd = 'scp root@btc.woodcol.com:/home/woodcol/btcctrade/test/btc38http/depth_%s.txt ./data/'%(logDate)
+    cmd = 'scp root@btc.woodcol.com:/home/woodcol/btcctrade/test/btc38http/data/depth_%s.txt ./data/'%(logDate)
     os.system(cmd)
     print 'downd %s end'%(logDate)
 def getNewLogFromServer():
