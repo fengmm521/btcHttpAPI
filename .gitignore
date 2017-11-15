@@ -2,3 +2,4 @@
 tftest/pattern/pattern.txt
 
 *.txt
+*.pyc

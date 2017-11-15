@@ -72,6 +72,10 @@ def getStruceTimeWithStrDate(strdate):
     timex = time.strptime(strdate, '%Y_%m_%d')
     return timex
 
+def geTimeStampFromStrDate(strdate):
+    structtime = getStruceTimeWithStrDate(strdate)
+    sectime = makeSecTimeWithStructTime(structtime)
+    return sectime
 
 #获取date的下一天日期,date格式:年_月_日
 def getNextDayDate(date):
