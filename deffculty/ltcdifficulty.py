@@ -17,7 +17,7 @@ import shutil
 reload(sys)
 sys.setdefaultencoding( "utf-8" )
 
-def cur_file_dir()
+def cur_file_dir():
     #获取脚本路径
     path = sys.path[0]
     #判断为脚本文件还是py2exe编译后的文件，如果是脚本文件，则返回的是脚本的目录，如果是py2exe编译后的文件，则返回的是编译后的文件路径
@@ -207,7 +207,37 @@ def ltcupleve():
     print 'subleve:%.4f'%(subleve)
 
 
+import time  
+import datetime  
+import pytz
+
+def test():
+
+
+
+
+    times='Mon,18 Dec 2017 7:40:09 am'  #PST = GTM-8
+    time_format=datetime.datetime.strptime(times,'%a,%d %b %Y %H:%M:%S %p')  
+    print time_format 
+
+    print time.strftime('%Z', time.gmtime())
+    times='Mon,18 Dec 2017 7:40:09 am'
+    outtime = time.strptime(times,'%a,%d %b %Y %H:%M:%S %p')
+    print outtime
+
+    print 'utctime:',time.gmtime()
+
+    now_utc = pytz.utc.localize(datetime.datetime.now())
+    now_pst = now_utc.astimezone(pytz.timezone('US/Pacific'))
+
+    print now_utc
+    print now_pst
+
+    tmpt = pytz.timezone('US/Pacific')
+    print tmpt
+
 if __name__ == '__main__':  
-    btcupleve()
-    ltcupleve()
+    # btcupleve()
+    # ltcupleve()
+    test()
     
