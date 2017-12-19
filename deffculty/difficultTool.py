@@ -11,7 +11,7 @@ import datetime
 reload(sys)
 sys.setdefaultencoding( "utf-8" )
 
-class GongGaoTool(object):
+class DifficultyLTCTool(object):
     """docstring for ClassName"""
     def __init__(self, isCmdMode = True):
         
@@ -130,7 +130,7 @@ class GongGaoTool(object):
 
 def main():
 
-    sharetool = GongGaoTool(isCmdMode = False)
+    sharetool = DifficultyLTCTool(isCmdMode = False)
 
     ggdats = sharetool.moneyMsg('ltc')
 
