@@ -120,7 +120,7 @@ class MatplotTool(object):
 
         self.drawPlot(x, y1add,'g')
         self.drawPlot(x, y2add,'b')
-        self.show()
+        # self.show()
 
 #   b   兰色线
 #   g   绿色线

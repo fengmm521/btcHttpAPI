@@ -74,15 +74,16 @@ def getLTCDiffculty(upcount = 0):
 
     mattool = matplotlibtool.MatplotTool()
 
-    for d in historydats:
-        print d
+    mattool.drarDiffcultWithAdd(historydats,upcount)
 
     for k in ggdats.keys():
         print k,ggdats[k]
 
+    mattool.show()
+
     moneyTool.wdriver.quit()
 
-    mattool.drarDiffcultWithAdd(historydats,upcount)
+    
 
 def getBTCDiffculty():
     moneyTool = difficultTool.DifficultyLTCTool()
