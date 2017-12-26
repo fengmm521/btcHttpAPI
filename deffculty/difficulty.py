@@ -72,9 +72,19 @@ def getLTCDiffculty(upcount = 0):
     moneyTool = difficultTool.DifficultyLTCTool()
     ggdats,historydats = moneyTool.moneyMsg('ltc')
 
+    incount = 0
+    if upcount > 1000:
+        for d in historydats:
+            tmpdate = d[0].replace('-','')
+            tmpnumber = int(tmpdate)
+            if tmpnumber > upcount:
+                incount += 1
+    else:
+        incount = upcount
+
     mattool = matplotlibtool.MatplotTool()
 
-    mattool.drarDiffcultWithAdd(historydats,upcount)
+    mattool.drarDiffcultWithAdd(historydats,incount)
 
     for k in ggdats.keys():
         print k,ggdats[k]
