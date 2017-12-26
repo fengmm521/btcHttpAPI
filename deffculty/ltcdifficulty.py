@@ -13,6 +13,10 @@ import time
 import urllib2
 import socket  
 import shutil 
+
+import json
+import time
+
 #将所有Excel文件转为xml文件
 reload(sys)
 sys.setdefaultencoding( "utf-8" )
@@ -236,8 +240,36 @@ def test():
     tmpt = pytz.timezone('US/Pacific')
     print tmpt
 
+
+def getUrl(purl):
+    try:
+        req = urllib2.Request(purl)
+        req.add_header('User-agent', 'Mozilla 5.10')
+        res = urllib2.urlopen(req)
+        html = res.read()
+        return html
+    except Exception, e:
+        print e
+    return None
+
+def getDateDayWithTime(ptime = None):
+    loctim = time.localtime(ptime)
+    #time.struct_time(tm_year=2015, tm_mon=8, tm_mday=2, tm_hour=12, tm_min=16, tm_sec=47, tm_wday=6, tm_yday=214, tm_isdst=0)
+    sendmsg = str(loctim.tm_year) + '-' + str(loctim.tm_mon) + '-' +  str(loctim.tm_mday)
+    return sendmsg
 if __name__ == '__main__':  
     # btcupleve()
     # ltcupleve()
-    test()
+
+    # test()
+
+    purl = 'https://www.okex.com/api/v1/future_kline.do?symbol=ltc_usd&type=1day&contract_type=this_week&size=400'
+
+    dats = getUrl(purl)
+    print dats
+
+    dats = json.loads(dats)
+
+    for d in dats:
+        print getDateDayWithTime(int(d[0])/1000)
     

@@ -7,6 +7,7 @@ import chardet  #中文编码判断
 import urllib2
 import hashlib
 import datetime
+import json
 
 reload(sys)
 sys.setdefaultencoding( "utf-8" )
@@ -17,7 +18,52 @@ class DifficultyLTCTool(object):
         
         self.isCmdMode = isCmdMode
         self.wdriver = None
-    #获取高官信息
+
+        self.klineURL = 'https://www.okex.com/api/v1/future_kline.do?symbol=ltc_usd&type=1day&contract_type=this_week&size=400'
+
+        self.dayKlines = []
+
+        self.dayData = {}
+
+        self.get300DayKline()
+
+    def get300DayKline(self):
+        
+        tmpstr= self.getUrl(self.klineURL)
+        
+        self.dayKlines = json.loads(tmpstr)
+
+        print 'klines:',len(self.dayKlines)
+
+    def getDayPrice(self,daystr):
+
+        if self.dayKlines and len(self.dayData.keys()) == 0:
+            #获取3天的平均价格
+            tmpdic = {}
+            dates = []
+
+            for d in self.dayKlines:
+                tmpdate = self.getDateDayWithTime(int(d[0])/1000)
+                tmpdic[tmpdate] = (float(d[1]) + float(d[4]))/2.0
+                dates.append(tmpdate)
+            tmpcount = len(dates)
+            for n in range(len(dates)):
+                if n < tmpcount - 2:
+                    pav = (tmpdic[dates[n]] + tmpdic[dates[n + 1]] + tmpdic[dates[n + 2]])/3.0
+                    tmpdic[dates[n]] = pav
+                elif n == tmpcount - 2:
+                    pav = (tmpdic[dates[n]] + tmpdic[dates[n + 1]])/2.0
+                    tmpdic[dates[n]] = pav
+                else:
+                    continue
+            self.dayData = tmpdic
+
+        if len(self.dayData.keys()) != 0 and self.dayData.has_key(daystr):
+            return self.dayData[daystr]
+        else:
+            return 'null'
+
+
     # def getManager(wdriver,tid):
     def conventStrTOUtf8(self,oldstr):
         try:
@@ -28,6 +74,13 @@ class DifficultyLTCTool(object):
         cnstrtype = chardet.detect(oldstr)['encoding']
         utf8str =  oldstr.decode(cnstrtype).encode('utf-8')
         return utf8str
+
+    def getYearMathDay(self,pstr):
+        tmptime = time.strptime(pstr,'%a %d %b %Y')
+        stemtime = int(time.mktime(tmptime)) + (22 * 60 * 60) #转为中国时间
+        outdate = time.strftime("%Y-%m-%d", time.gmtime(stemtime))
+        wday = time.strftime("%w", time.gmtime(stemtime))
+        return outdate,wday
 
     def getDiffcultFromWeb(self,browser):
 
@@ -81,14 +134,44 @@ class DifficultyLTCTool(object):
         lastupdatetab = browser.find_element_by_xpath('//*[@id="result"]/tbody')
 
         #获取历史难度变化数据
-        self.conventLastUpdate(lastupdatetab.text)
+        historydats = self.conventLastUpdate(lastupdatetab.text)
+        historydats[0][3] = u'%d'%(outdic['addDif'])
+        historydats[0][4] = outdic['uppencent']
         
-        return outdic
+        return outdic,historydats
+
+
+    def getDateDayWithTime(self,ptime = None):
+        loctim = time.localtime(ptime)
+        #time.struct_time(tm_year=2015, tm_mon=8, tm_mday=2, tm_hour=12, tm_min=16, tm_sec=47, tm_wday=6, tm_yday=214, tm_isdst=0)
+        m = str(loctim.tm_mon)
+        if len(m) == 1:
+            m = '0' + m
+
+        d = str(loctim.tm_mday)
+        if len(d) == 1:
+            d = '0' + d
+
+        sendmsg = str(loctim.tm_year) + '-' + m + '-' +  d
+        return sendmsg
 
     def conventLastUpdate(self,linestrs):
         tmpstrs = linestrs.split('\n')
+        lastdifs = []
         for l in tmpstrs:
-            print l
+            tmpl = l.replace('\n','')
+            tmpl = ' '.join(tmpl.split())
+            tmpls = tmpl.split(' ')
+            tmpls[1] = tmpls[1][:-2]
+            datetmp = ' '.join(tmpls[0:4])
+            diftmp = tmpls[4]
+            adddiftmp = tmpls[5]
+            addpencent = '%.2f%%'%((float(adddiftmp)/float(diftmp))*100)
+            datestr,wday = self.getYearMathDay(datetmp)
+            dateprice = self.getDayPrice(datestr)
+            datepricestr = '%.2f'%(dateprice)
+            lastdifs.append([datestr,wday,diftmp,adddiftmp,addpencent,datepricestr])
+        return lastdifs
 
     #获取公司资料
     def moneyMsg(self,ptype):
@@ -113,8 +196,8 @@ class DifficultyLTCTool(object):
 
         self.wdriver.get(hurl)
 
-        #企业高管信息
-        datdic = self.getDiffcultFromWeb(self.wdriver)                                                #获取高管信息
+        #难度信息 
+        datdic= self.getDiffcultFromWeb(self.wdriver)                                               
         return datdic
 
     def getUrl(self,purl):
@@ -132,7 +215,7 @@ def main():
 
     sharetool = DifficultyLTCTool(isCmdMode = False)
 
-    ggdats = sharetool.moneyMsg('ltc')
+    ggdats,historydats = sharetool.moneyMsg('ltc')
 
     for k in ggdats.keys():
         print k,ggdats[k]

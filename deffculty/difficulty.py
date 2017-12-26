@@ -10,6 +10,8 @@ import sys
 
 import difficultTool
 
+import matplotlibtool
+
 #将所有Excel文件转为xml文件
 reload(sys)
 sys.setdefaultencoding( "utf-8" )
@@ -66,14 +68,21 @@ def getAllExtFile(path,fromatx = ".txt"):
     return jsonfilelist
 
 
-def getLTCDiffculty():
+def getLTCDiffculty(upcount = 0):
     moneyTool = difficultTool.DifficultyLTCTool()
-    ggdats = moneyTool.moneyMsg('ltc')
+    ggdats,historydats = moneyTool.moneyMsg('ltc')
+
+    mattool = matplotlibtool.MatplotTool()
+
+    for d in historydats:
+        print d
 
     for k in ggdats.keys():
         print k,ggdats[k]
 
     moneyTool.wdriver.quit()
+
+    mattool.drarDiffcultWithAdd(historydats,upcount)
 
 def getBTCDiffculty():
     moneyTool = difficultTool.DifficultyLTCTool()
@@ -90,9 +99,9 @@ def getLTCDiffcultyCNWeb():
 def getBTCDiffcultyCNWeb():
     pass
 
-def main(ptype):
+def main(ptype,upcount = 0):
     if ptype == 'ltc' or ptype == 'LTC':
-        getLTCDiffculty()
+        getLTCDiffculty(upcount)
     elif ptype == 'ltccn' or ptype == 'LTCCN':
         getLTCDiffcultyCNWeb()
     elif ptype == 'btc' or ptype == 'BTC':
@@ -107,6 +116,13 @@ if __name__ == '__main__':
         ptype = args[1]
         print ptype
         main(ptype)
+    elif len(args) == 3 :
+        ptype = args[1]
+        print ptype
+        upcount = args[2]
+        print 'upcount:',upcount
+        ncount = int(upcount)
+        main(ptype,ncount)
     else:
         print "请加上要获取的数据货币类型，目前支持ltc,ltccn,btc,btccn"
     

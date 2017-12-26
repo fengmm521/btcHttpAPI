@@ -54,10 +54,17 @@ def getDateDay():
     sendmsg = str(loctim.tm_year) + '_' + str(loctim.tm_mon) + '_' +  str(loctim.tm_mday)
     return sendmsg
 
+def getDateDayWithTime(ptime = None):
+    loctim = time.localtime(ptime)
+    #time.struct_time(tm_year=2015, tm_mon=8, tm_mday=2, tm_hour=12, tm_min=16, tm_sec=47, tm_wday=6, tm_yday=214, tm_isdst=0)
+    sendmsg = str(loctim.tm_year) + '_' + str(loctim.tm_mon) + '_' +  str(loctim.tm_mday)
+    return sendmsg
+
 
 if __name__ == '__main__':
     # print datetime.datetime.utcnow()
     # print timestamp_utc_now()
-    print timestamp2datetime(int(time.time()),True)
+    # print timestamp2datetime(int(time.time()),True)
     # outstr = timestamp2datetime(int(time.time() + 60 * 5),True)
-    # print outstr
+    outstr = getDateDayWithTime(1440308760)
+    print outstr
