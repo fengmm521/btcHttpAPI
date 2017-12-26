@@ -271,5 +271,5 @@ if __name__ == '__main__':
     dats = json.loads(dats)
 
     for d in dats:
-        print getDateDayWithTime(int(d[0])/1000)
+        print getDateDayWithTime(int(d[0])/1000),d
     

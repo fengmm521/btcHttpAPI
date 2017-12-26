@@ -69,6 +69,11 @@ class MatplotTool(object):
         datasback = tmpdats[::-1] 
         dates = []
         dicdat = {}
+        basedif = float(datasback[0][2])
+        baseprice = float(datasback[0][5])
+
+        y1add = []
+        y2add = []
         for n in range(len(datasback)):
             if n == 0:
                 x.append(n + 1)
@@ -76,10 +81,17 @@ class MatplotTool(object):
                 pmon = datasback[n][4][:-1]
                 difp = float(pdif)
                 monp = float(pmon)
+
                 y1.append(difp)
                 y2.append(monp)
+
+                y1addtmp = basedif / basedif
+                y2addtmp = baseprice / baseprice
+                y1add.append(y1addtmp)
+                y2add.append(y2addtmp)
+
                 dates.append(datasback[n][0])
-                dicdat[datasback[n][0]] = datasback[n][1:]
+                dicdat[datasback[n][0]] = datasback[n]
             else:
                 x.append(n + 1)
                 pdif = datasback[n][4][:-1]
@@ -88,26 +100,19 @@ class MatplotTool(object):
                 monp = float(pmon)*100
                 y1.append(difp)
                 y2.append(monp)
+
+                y1addtmp = float(datasback[n][2]) / basedif
+                y2addtmp = float(datasback[n][5]) / baseprice
+                y1add.append(y1addtmp)
+                y2add.append(y2addtmp)
+
                 dates.append(datasback[n][0])
-                dicdat[datasback[n][0]] = datasback[n][1:]
-        y1add = []
-        pencenty1 = 1.0
-
-        for y in y1:
-            y1add.append(pencenty1)
-            pencenty1  = pencenty1*((y/100.0) + 1.0)
-
-        y2add = []
-        pencenty2 = 1.0
-        for y in y2:
-            y2add.append(pencenty2)
-            pencenty2 = pencenty2 * ((y/100.0) + 1.0)
-
+                dicdat[datasback[n][0]] = datasback[n]
         
         for n in range(len(y1add)):
-            tmpstr1 = 'difficulty:%.2f'%(y1add[n])
+            tmpstr1 = 'd:%.2f'%(y1add[n])
             dicdat[dates[n]].append(tmpstr1)
-            tmpstr2 = 'price:%.2f'%(y2add[n])
+            tmpstr2 = 'p:%.2f'%(y2add[n])
             dicdat[dates[n]].append(tmpstr2)
             print dicdat[dates[n]]
         print 'draw update count:',count
