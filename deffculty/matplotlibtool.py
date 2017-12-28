@@ -114,7 +114,7 @@ class MatplotTool(object):
             dicdat[dates[n]].append(tmpstr1)
             tmpstr2 = 'p:%.2f'%(y2add[n])
             dicdat[dates[n]].append(tmpstr2)
-            print dicdat[dates[n]]
+            print n,dicdat[dates[n]]
         print 'draw update count:',count
         print 'day from %s to %s'%(dates[0],dates[-1])
 

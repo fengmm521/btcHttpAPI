@@ -1,5 +1,5 @@
 
 tftest/pattern/pattern.txt
-
+*.log
 *.txt
 *.pyc
