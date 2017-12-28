@@ -3,3 +3,7 @@ tftest/pattern/pattern.txt
 *.log
 *.txt
 *.pyc
+
+*.log
+
+deffculty/ghostdriver.log
