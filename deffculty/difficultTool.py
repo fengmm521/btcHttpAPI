@@ -128,7 +128,11 @@ class DifficultyLTCTool(object):
                 # print time.mktime(tmptime)
                 stemtime = int(time.mktime(tmptime)) + (22 * 60 * 60) #转为中国时间
                 outdic['updated'] = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(stemtime))
-                outdic['uppencent'] = '%.2f%%'%(float(outdic['addDif'])/float(outdic['difficulty']) * 100)
+
+                if outdic['difficulty'] == 0:
+                    outdic['uppencent'] = '0.00%'
+                else:
+                    outdic['uppencent'] = '%.2f%%'%(float(outdic['addDif'])/float(outdic['difficulty']) * 100)
 
 
         lastupdatetab = browser.find_element_by_xpath('//*[@id="result"]/tbody')
@@ -136,7 +140,13 @@ class DifficultyLTCTool(object):
         #获取历史难度变化数据
         historydats = self.conventLastUpdate(lastupdatetab.text)
         historydats[0][3] = u'%d'%(outdic['addDif'])
-        historydats[0][4] = outdic['uppencent']
+
+        if outdic['difficulty'] == 0 and outdic['addDif'] == outdic['nextDif']:
+            outdic['addDif'] = float(outdic['nextDif'] - float(historydats[0][2]))
+            historydats[0][4] =  '%.2f%%'%(float(outdic['addDif'])/float(historydats[0][2]) * 100)
+            outdic['uppencent'] = historydats[0][4]
+        else:
+            historydats[0][4] = outdic['uppencent']
         
         return outdic,historydats
 

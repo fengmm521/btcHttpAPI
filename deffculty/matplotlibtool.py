@@ -94,6 +94,7 @@ class MatplotTool(object):
                 dicdat[datasback[n][0]] = datasback[n]
             else:
                 x.append(n + 1)
+                print datasback[n][4]
                 pdif = datasback[n][4][:-1]
                 pmon = (float(datasback[n][5]) - float(datasback[n-1][5]))/float(datasback[n-1][5])
                 difp = float(pdif)
@@ -117,6 +118,13 @@ class MatplotTool(object):
             print n,dicdat[dates[n]]
         print 'draw update count:',count
         print 'day from %s to %s'%(dates[0],dates[-1])
+
+        startprice = float(dicdat[dates[-1]][6].split(':')[-1])
+        dprcent = float(dicdat[dates[0]][5])
+
+        equprice = '%.2f'%(float(startprice*dprcent))
+
+        print 'equprice:',equprice
 
         self.drawPlot(x, y1add,'g')
         self.drawPlot(x, y2add,'b')
