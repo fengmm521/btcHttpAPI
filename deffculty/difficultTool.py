@@ -58,11 +58,38 @@ class DifficultyLTCTool(object):
                     continue
             self.dayData = tmpdic
 
+        if not self.dayData.has_key(daystr):
+            self.testerro()
+
+
         if len(self.dayData.keys()) != 0 and self.dayData.has_key(daystr):
             return self.dayData[daystr]
         else:
-            return 'null'
+            days = self.dayData.keys()
+            days.sort()
+            tmpdays = []
+            for n in range(len(days)):
+                d = days[n]
+                if d > daystr:
+                    tmpdays = [days[n-1],days[n]]
+                    break
+            print tmpdays
+            tmp = (self.dayData[tmpdays[0]] + self.dayData[tmpdays[1]])/2
+            return tmp
+    def testerro(self):
+        isNext = False
+        for kl in self.dayKlines:
+            tmpdate = self.getDateDayWithTime(int(kl[0])/1000)
 
+            if isNext:
+                print tmpdate,kl[0]
+
+            if tmpdate == '2018-02-06':
+                print tmpdate,kl[0]
+                isNext = True
+            else:
+                isNext = False
+            print tmpdate
 
     # def getManager(wdriver,tid):
     def conventStrTOUtf8(self,oldstr):
@@ -165,6 +192,10 @@ class DifficultyLTCTool(object):
         sendmsg = str(loctim.tm_year) + '-' + m + '-' +  d
         return sendmsg
 
+
+    def getNextDay(self,daystr):
+        pass
+
     def conventLastUpdate(self,linestrs):
         tmpstrs = linestrs.split('\n')
         lastdifs = []
@@ -179,6 +210,7 @@ class DifficultyLTCTool(object):
             addpencent = '%.2f%%'%((float(adddiftmp)/float(diftmp))*100)
             datestr,wday = self.getYearMathDay(datetmp)
             dateprice = self.getDayPrice(datestr)
+            print dateprice,type(dateprice)
             datepricestr = '%.2f'%(dateprice)
             lastdifs.append([datestr,wday,diftmp,adddiftmp,addpencent,datepricestr])
         return lastdifs
