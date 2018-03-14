@@ -8,6 +8,7 @@ import urllib2
 import hashlib
 import datetime
 import json
+import requests
 
 reload(sys)
 sys.setdefaultencoding( "utf-8" )
@@ -19,8 +20,8 @@ class DifficultyLTCTool(object):
         self.isCmdMode = isCmdMode
         self.wdriver = None
 
-        self.klineURL = 'https://www.okex.com/api/v1/future_kline.do?symbol=ltc_usd&type=1day&contract_type=this_week&size=400'
-
+        # self.klineURL = 'https://www.okex.com/api/v1/future_kline.do?symbol=ltc_usd&type=1day&contract_type=this_week&size=400'
+        self.klineURL = 'https://104.25.20.25/api/v1/future_kline.do?symbol=ltc_usd&type=1day&contract_type=this_week&size=400'
         self.dayKlines = []
 
         self.dayData = {}
@@ -242,7 +243,7 @@ class DifficultyLTCTool(object):
         datdic= self.getDiffcultFromWeb(self.wdriver)                                               
         return datdic
 
-    def getUrl(self,purl):
+    def getUrltmp(self,purl):
         try:
             req = urllib2.Request(purl)
             req.add_header('User-agent', 'Mozilla 5.10')
@@ -252,6 +253,16 @@ class DifficultyLTCTool(object):
         except Exception, e:
             print e
         return None
+    def getUrl(self,purl):
+        try:
+            s = requests.Session()
+            #104.25.20.25,国内ip被墙，这个ip可以
+            dat = s.get(purl, headers={"Host": "www.okex.com"},verify=False)
+            html = self.conventStrTOUtf8(dat.text)
+            return html
+        except Exception as e:
+            raise e
+        
 
 def main():
 
